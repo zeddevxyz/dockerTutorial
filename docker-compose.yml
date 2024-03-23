@@ -1,0 +1,54 @@
+networks:
+  mynetwork:
+
+volumes:
+    mysqldata:
+      external: true
+    guacavolume:
+      external: true
+
+      
+services:
+  mysql:
+    container_name: guacamole_db
+    image: mysql
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./:/windows_drive
+    environment: 
+      TZ: Asia/Hong_Kong
+      MYSQL_ROOT_HOST: "%" 
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: guacamole_user
+      MYSQL_PASSWORD: 123
+
+  guacd:
+    container_name: guacamole_daemon
+    image: guacamole/guacd
+    restart: unless-stopped
+    environment:
+      GUACD_LOG_LEVEL: debug
+      TZ: Asia/Hong_Kong
+
+  guacamole:
+    container_name: guacamole_web
+    image: guacamole/guacamole
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    volumes:
+      - guacavolume:/opt/guacamole
+    environment:
+      TZ: Asia/Hong_Kong
+      GUACD_HOSTNAME: guacamole_daemon
+      MYSQL_HOSTNAME: guacamole_db 
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 123
+    depends_on:
+      - mysql
+      - guacd
